@@ -1,3 +1,4 @@
+import { ErrorCodeEnum } from "@/enums/error-code.enum";
 import { RoleEnum } from "@/enums/role.enum";
 import AccountModel from "@/models/account.model";
 import MemberModel from "@/models/member.model";
@@ -19,49 +20,62 @@ export const loginOrCreateUser = async (data: {
 
     try {
         session.startTransaction();
-        let user = await UserModel.findOne({ email });
+
+        let user = await UserModel.findOne({ email }).session(session);
+
         if (!user) {
-            user = new UserModel({
+            user = await new UserModel({
                 name: displayName,
                 email,
                 profilePicture: picture || null,
-            });
-            await user.save({ session });
-            const account = new AccountModel({
+            }).save({ session });
+
+            await new AccountModel({
                 userId: user._id,
                 provider,
                 providerId,
-            });
-            await account.save({ session });
-            const workspace = new WorkspaceModel({
+            }).save({ session });
+
+            const workspace = await new WorkspaceModel({
                 name: `${displayName}'s Workspace`,
                 owner: user._id,
                 description: `Workspace created by ${displayName}`,
-            });
-            await workspace.save({ session });
+            }).save({ session });
+
             const ownerRole = await RoleModel.findOne({
                 name: RoleEnum.OWNER,
             }).session(session);
-            if (!ownerRole) {
-                throw new NotFoundException("Owner role not found");
-            }
-            const member = new MemberModel({
+            if (!ownerRole) throw new NotFoundException("Owner role not found");
+
+            await new MemberModel({
                 userId: user._id,
                 workspaceId: workspace._id,
                 role: ownerRole._id,
                 joinedAt: new Date(),
-            });
-            await member.save({ session });
+            }).save({ session });
+
             user.currentWorkspace = workspace._id as mongoose.Types.ObjectId;
             await user.save({ session });
+        } else {
+            const account = await AccountModel.findOne({
+                userId: user._id,
+                provider,
+            }).session(session);
+            if (!account) {
+                await new AccountModel({
+                    userId: user._id,
+                    provider,
+                    providerId,
+                }).save({ session });
+            }
         }
+
         await session.commitTransaction();
-        await session.endSession();
-        return { user };
+        return { user, workspaceId: user.currentWorkspace };
     } catch (error) {
         await session.abortTransaction();
-        await session.endSession();
-        throw new NotFoundException("User not found");
+        throw error;
+    } finally {
+        session.endSession();
     }
 };
-
