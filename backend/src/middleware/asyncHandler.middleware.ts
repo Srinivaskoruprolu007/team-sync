@@ -8,10 +8,5 @@ type AsyncControllerType = (
 
 export const asyncHandler =
     (controller: AsyncControllerType): AsyncControllerType =>
-    async (req, res, next) => {
-        try {
-            await controller(req, res, next);
-        } catch (error) {
-            next(error);
-        }
-    };
+    (req, res, next) =>
+        Promise.resolve(controller(req, res, next)).catch(next);
