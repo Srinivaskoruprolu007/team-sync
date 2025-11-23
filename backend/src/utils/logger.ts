@@ -1,8 +1,19 @@
 import winston from "winston";
 
+const dedupeFormat = () => {
+    let lastKey: string | null = null;
+    return winston.format((info) => {
+        const key = `${info.level}:${String(info.message)}`;
+        if (key === lastKey) return false;
+        lastKey = key;
+        return info;
+    })();
+};
+
 const logger = winston.createLogger({
-    level: "info",
+    level: process.env.NODE_ENV === "production" ? "info" : "debug",
     format: winston.format.combine(
+        dedupeFormat(),
         winston.format.timestamp({
             format: () =>
                 new Intl.DateTimeFormat("en-IN", {
@@ -26,14 +37,28 @@ const logger = winston.createLogger({
         })
     ),
     transports: [
-        new winston.transports.Console(),
-
-        // save logs to files
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.printf(
+                    ({ level, message, timestamp, ...meta }) => {
+                        const metaString = Object.keys(meta).length
+                            ? JSON.stringify(meta, null, 2)
+                            : "";
+                        return `${timestamp} ${level}: ${message} ${metaString}`;
+                    }
+                )
+            ),
+        }),
         new winston.transports.File({
             filename: "logs/error.log",
             level: "error",
+            format: winston.format.json(),
         }),
-        new winston.transports.File({ filename: "logs/app.log" }),
+        new winston.transports.File({
+            filename: "logs/app.log",
+            format: winston.format.json(),
+        }),
     ],
 });
 
