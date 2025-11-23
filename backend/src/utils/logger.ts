@@ -13,7 +13,6 @@ const dedupeFormat = () => {
 const logger = winston.createLogger({
     level: process.env.NODE_ENV === "production" ? "info" : "debug",
     format: winston.format.combine(
-        dedupeFormat(),
         winston.format.timestamp({
             format: () =>
                 new Intl.DateTimeFormat("en-IN", {
