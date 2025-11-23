@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface MemberDocument extends Document {
     userId: mongoose.Types.ObjectId;
-    workspace: mongoose.Types.ObjectId;
+    workspaceId: mongoose.Types.ObjectId;
     role: mongoose.Types.ObjectId;
     joinedAt: Date;
 }
@@ -14,7 +14,7 @@ const MemberSchema = new Schema<MemberDocument>(
             ref: "User",
             required: true,
         },
-        workspace: {
+        workspaceId: {
             type: Schema.Types.ObjectId,
             ref: "Workspace",
             required: true,
