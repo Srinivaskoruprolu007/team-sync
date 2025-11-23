@@ -25,7 +25,10 @@ passport.use(
             done: any
         ) => {
             try {
-                const { email, sub: googleId, picture } = profile._json();
+                // const { email, sub: googleId, picture } = profile._json();
+                const email = profile.emails?.[0]?.value;
+                const googleId = profile.id;
+                const picture = profile.photos?.[0]?.value;
                 logger.info(`Google user logged in: ${email}`);
                 if (!googleId) {
                     logger.error("Google Id not found");
@@ -47,9 +50,9 @@ passport.use(
     )
 );
 
-passport.serializeUser((user: any, done) => {
-    done(null, user);
-});
-passport.deserializeUser((user: any, done) => {
-    done(null, user);
-});
+// passport.serializeUser((user: any, done) => {
+//     done(null, user);
+// });
+// passport.deserializeUser((user: any, done) => {
+//     done(null, user);
+// });
