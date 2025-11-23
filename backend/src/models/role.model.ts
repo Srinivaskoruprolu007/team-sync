@@ -1,4 +1,4 @@
-import { PermissionType, RoleEnum, RoleType } from "@/enums/role.enum";
+import { Permissions, PermissionType, RoleEnum, RoleType } from "@/enums/role.enum";
 import { RolePermssions } from "@/utils/roles-permission";
 import mongoose, { Document, Schema } from "mongoose";
 
