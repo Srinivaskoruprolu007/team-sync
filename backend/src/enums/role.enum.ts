@@ -1,7 +1,7 @@
 export const RoleEnum = {
-    USER: "USER",
     ADMIN: "ADMIN",
     MEMBER: "MEMBER",
+    OWNER: "OWNER",
 } as const;
 
 export type RoleType = keyof typeof RoleEnum;
