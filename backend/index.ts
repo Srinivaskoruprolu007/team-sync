@@ -13,6 +13,9 @@ import { errorHandler } from "@/middleware/error.middleware";
 import { HTTPSTATUS } from "@/config/http.config";
 import { asyncHandler } from "@/middleware/asyncHandler.middleware";
 import morgan from "morgan";
+import "@/config/passport.config";
+import passport from "passport";
+import authRoute from "@/routes/auth.route";
 
 const app: Application = express();
 const BASE_PATH = env.base_path;
@@ -29,6 +32,8 @@ app.use(
         sameSite: "lax",
     })
 );
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(
     cors({
@@ -45,6 +50,8 @@ app.get(
         return res.status(HTTPSTATUS.OK).json({ message: "Hello World!" });
     })
 );
+
+app.use(`${BASE_PATH}/auth`, authRoute);
 
 app.use(errorHandler);
 
