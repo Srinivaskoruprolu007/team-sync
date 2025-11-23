@@ -22,18 +22,18 @@ const BASE_PATH = env.base_path;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-    session({
-        name: "session",
-        keys: [env.session_secret],
-        maxAge: 24 * 60 * 60 * 1000,
-        secure: env.node_env === "production",
-        httpOnly: true,
-        sameSite: "lax",
-    })
-);
+// app.use(
+//     session({
+//         name: "session",
+//         keys: [env.session_secret],
+//         maxAge: 24 * 60 * 60 * 1000,
+//         secure: env.node_env === "production",
+//         httpOnly: true,
+//         sameSite: "lax",
+//     })
+// );
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 app.use(
     cors({
