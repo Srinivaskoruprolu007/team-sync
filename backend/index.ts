@@ -5,7 +5,6 @@ import express, {
     type Application,
 } from "express";
 import cors from "cors";
-import session from "cookie-session";
 import { env } from "./src/utils/getEnv";
 import connectDatabase from "@/config/db.config";
 import logger from "@/utils/logger";
@@ -47,7 +46,7 @@ app.use(morgan("combined"));
 app.get(
     "/",
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        return res.status(HTTPSTATUS.OK).json({ message: "Hello World!" });
+        res.status(HTTPSTATUS.OK).json({ message: "Hello World!" });
     })
 );
 
