@@ -19,10 +19,10 @@
   },
   "lint-staged": {
     "src/**/*.{ts,js}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
-    "src/**/*.{json,md}": [
+    "src/**/*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
   },
