@@ -71,7 +71,6 @@ const logger = winston.createLogger({
         new winston.transports.File({
             filename: "logs/app.log",
             format: winston.format.json(),
-            format: winston.format.json(),
         }),
         new winston.transports.File({
             filename: "logs/app.log",
