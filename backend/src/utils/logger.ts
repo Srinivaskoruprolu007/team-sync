@@ -1,11 +1,11 @@
 import winston from "winston";
 
 const dedupeFormat = () => {
-    let lastKey: string | null = null;
+    let lastMessage: string | null = null;
     return winston.format((info) => {
-        const key = `${info.level}:${String(info.message)}`;
-        if (key === lastKey) return false;
-        lastKey = key;
+        const message = String(info.message);
+        if (message === lastMessage) return false; // skip duplicate
+        lastMessage = message;
         return info;
     })();
 };
