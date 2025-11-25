@@ -11,6 +11,7 @@ import '@/config/passport.config';
 import passport from 'passport';
 import authRoute from '@/routes/auth.route';
 import cookieParser from 'cookie-parser';
+import userRoute from '@/routes/user.route';
 
 const app: Application = express();
 const BASE_PATH = env.base_path;
@@ -49,6 +50,7 @@ app.get(
 );
 
 app.use(`${BASE_PATH}/auth`, authRoute);
+app.use(`${BASE_PATH}/user`, userRoute);
 
 app.use(errorHandler);
 

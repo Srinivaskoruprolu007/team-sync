@@ -9,6 +9,7 @@ import { generateAccessToken, generateRefreshToken, verifyToken } from '@/utils/
 import AccountModel from '@/models/account.model';
 import { ProvideEnum } from '@/enums/account-provider.enum';
 import logger from '@/utils/logger';
+import UserModel from '@/models/user.model';
 
 export const googleLoginCallback = asyncHandler(async (req: Request, res: Response) => {
     const user = req.user as any;
@@ -69,13 +70,23 @@ export const loginController = asyncHandler(
                     return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: info?.message });
                 }
                 // access + refresh tokens
-                const accessToken = generateAccessToken({ id: user._id, email: user.email });
+                const accessToken = generateAccessToken({
+                    id: user._id,
+                    email: user.email,
+                    workspace: user.currentWorkspace,
+                });
                 const refreshToken = generateRefreshToken({ id: user._id });
 
                 await AccountModel.findOneAndUpdate(
                     { provider: ProvideEnum.EMAIL, providerId: user.email },
                     { refreshToken, tokenExpiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
                 );
+                res.cookie('auth_token', accessToken, {
+                    httpOnly: true,
+                    secure: env.node_env === 'production',
+                    sameSite: 'lax',
+                    maxAge: 15 * 60 * 1000,
+                });
                 return res.status(HTTPSTATUS.OK).json({
                     message: 'Login successful',
                     data: {
@@ -96,7 +107,7 @@ export const refreshController = asyncHandler(async (req: Request, res: Response
     if (!refreshToken)
         return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Missing refresh token' });
     try {
-        const decoded = verifyToken(refreshToken);
+        const decoded = verifyToken(refreshToken) as { id: string };
         logger.info('decoded', { decoded });
         const account = await AccountModel.findOne({
             userId: decoded.id,
@@ -107,12 +118,15 @@ export const refreshController = asyncHandler(async (req: Request, res: Response
         if (account.tokenExpiry && account.tokenExpiry.getTime() < Date.now()) {
             return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Refresh token expired' });
         }
-        const newAccessToken = generateAccessToken({ id: decoded._id, email: decoded.email });
+        const user = await UserModel.findById(decoded.id);
+        if (!user)
+            return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
+        const newAccessToken = generateAccessToken({ id: user._id, email: user.email });
         res.cookie('auth_token', newAccessToken, {
             httpOnly: true,
             secure: env.node_env === 'production',
             sameSite: 'lax',
-            maxAge: 7 * 60 * 60 * 1000,
+            maxAge: 15 * 60 * 1000,
         });
         return res.status(HTTPSTATUS.OK).json({ accessToken: newAccessToken });
     } catch (error) {

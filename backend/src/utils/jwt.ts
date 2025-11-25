@@ -12,5 +12,3 @@ export const generateRefreshToken = (payload: object) => {
 export const verifyToken = (token: string) => {
     return jwt.verify(token, env.session_secret);
 };
-
-

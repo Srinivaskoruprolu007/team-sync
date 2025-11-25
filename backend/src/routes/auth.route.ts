@@ -21,7 +21,6 @@ authRoute.post('/refresh', refreshController);
 
 authRoute.post('/logout', logoutController);
 
-authRoute.get('/me', authenticateJWT, (req, res) => res.status(200).json(req.user));
 authRoute.get(
     '/google',
     passport.authenticate('google', {
