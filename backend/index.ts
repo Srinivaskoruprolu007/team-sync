@@ -1,20 +1,16 @@
-import express, {
-    type NextFunction,
-    type Request,
-    type Response,
-    type Application,
-} from "express";
-import cors from "cors";
-import { env } from "./src/utils/getEnv";
-import connectDatabase from "@/config/db.config";
-import logger from "@/utils/logger";
-import { errorHandler } from "@/middleware/error.middleware";
-import { HTTPSTATUS } from "@/config/http.config";
-import { asyncHandler } from "@/middleware/asyncHandler.middleware";
-import morgan from "morgan";
-import "@/config/passport.config";
-import passport from "passport";
-import authRoute from "@/routes/auth.route";
+import express, { type NextFunction, type Request, type Response, type Application } from 'express';
+import cors from 'cors';
+import { env } from './src/utils/getEnv';
+import connectDatabase from '@/config/db.config';
+import logger from '@/utils/logger';
+import { errorHandler } from '@/middleware/error.middleware';
+import { HTTPSTATUS } from '@/config/http.config';
+import { asyncHandler } from '@/middleware/asyncHandler.middleware';
+import morgan from 'morgan';
+import '@/config/passport.config';
+import passport from 'passport';
+import authRoute from '@/routes/auth.route';
+import cookieParser from 'cookie-parser';
 
 const app: Application = express();
 const BASE_PATH = env.base_path;
@@ -31,6 +27,8 @@ app.use(express.urlencoded({ extended: true }));
 //         sameSite: "lax",
 //     })
 // );
+
+app.use(cookieParser());
 app.use(passport.initialize());
 // app.use(passport.session());
 
@@ -42,11 +40,11 @@ app.use(
 );
 
 // logger middleware
-app.use(morgan("combined"));
+app.use(morgan('combined'));
 app.get(
-    "/",
+    '/',
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        res.status(HTTPSTATUS.OK).json({ message: "Hello World!" });
+        res.status(HTTPSTATUS.OK).json({ message: 'Hello World!' });
     })
 );
 
@@ -55,8 +53,6 @@ app.use(`${BASE_PATH}/auth`, authRoute);
 app.use(errorHandler);
 
 app.listen(env.port, async () => {
-    logger.info(
-        `Server is running on http://localhost:${env.port} in ${BASE_PATH}`
-    );
+    logger.info(`Server is running on http://localhost:${env.port} in ${BASE_PATH}`);
     await connectDatabase();
 });

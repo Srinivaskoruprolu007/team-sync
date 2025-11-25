@@ -1,12 +1,13 @@
-import passport from "passport";
-import { Request } from "express";
+import passport from 'passport';
+import { Request } from 'express';
 
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { env } from "@/utils/getEnv";
-import logger from "@/utils/logger";
-import { NotFoundException } from "@/utils/appError";
-import { ProvideEnum } from "@/enums/account-provider.enum";
-import { loginOrCreateUser } from "@/services/auth.service";
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as LocalStrategy } from 'passport-local';
+import { env } from '@/utils/getEnv';
+import logger from '@/utils/logger';
+import { NotFoundException } from '@/utils/appError';
+import { ProvideEnum } from '@/enums/account-provider.enum';
+import { loginOrCreateUser, verifyUser } from '@/services/auth.service';
 
 passport.use(
     new GoogleStrategy(
@@ -14,7 +15,7 @@ passport.use(
             clientID: env.google_client_id,
             clientSecret: env.google_client_secret,
             callbackURL: env.google_callback_url,
-            scope: ["email", "profile"],
+            scope: ['email', 'profile'],
             passReqToCallback: true,
         },
         async (
@@ -31,8 +32,8 @@ passport.use(
                 const picture = profile.photos?.[0]?.value;
                 logger.info(`Google user logged in: ${email}`);
                 if (!googleId) {
-                    logger.error("Google Id not found");
-                    throw new NotFoundException("Google account not found");
+                    logger.error('Google Id not found');
+                    throw new NotFoundException('Google account not found');
                 }
                 logger.info(`Google Id ${googleId} found`);
                 const { user } = await loginOrCreateUser({
@@ -45,6 +46,27 @@ passport.use(
                 done(null, user);
             } catch (error) {
                 done(error, false);
+            }
+        }
+    )
+);
+
+passport.use(
+    new LocalStrategy(
+        {
+            usernameField: 'email',
+            passwordField: 'password',
+            session: false,
+        },
+        async (email: string, password: string, done: any) => {
+            try {
+                const user = await verifyUser({ email, password });
+                if (!user) {
+                    return done(null, false, { message: 'Invalid email or password' });
+                }
+                return done(null, user);
+            } catch (error) {
+                return done(error, false, { message: error.message });
             }
         }
     )
