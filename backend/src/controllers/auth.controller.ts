@@ -8,7 +8,6 @@ import passport from 'passport';
 import { generateAccessToken, generateRefreshToken, verifyToken } from '@/utils/jwt';
 import AccountModel from '@/models/account.model';
 import { ProvideEnum } from '@/enums/account-provider.enum';
-import logger from '@/utils/logger';
 import UserModel from '@/models/user.model';
 
 export const googleLoginCallback = asyncHandler(async (req: Request, res: Response) => {
@@ -105,12 +104,10 @@ export const loginController = asyncHandler(
 // refresh token
 export const refreshController = asyncHandler(async (req: Request, res: Response) => {
     const refreshToken = req.body.refreshToken || req.cookies.refresh_token;
-    logger.info('refresh token', { refreshToken });
     if (!refreshToken)
         return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Missing refresh token' });
     try {
         const decoded = verifyToken(refreshToken) as { id: string };
-        logger.info('decoded', { decoded });
         const account = await AccountModel.findOne({
             userId: decoded.id,
             refreshToken,
