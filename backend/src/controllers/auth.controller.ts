@@ -69,11 +69,13 @@ export const loginController = asyncHandler(
                 if (!user) {
                     return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: info?.message });
                 }
+                const rawUser = (user as any)?.user;
                 // access + refresh tokens
+
                 const accessToken = generateAccessToken({
-                    id: user._id,
-                    email: user.email,
-                    workspace: user.currentWorkspace,
+                    id: rawUser._id,
+                    email: rawUser.email,
+                    workspace: rawUser.currentWorkspace,
                 });
                 const refreshToken = generateRefreshToken({ id: user._id });
 
@@ -90,9 +92,9 @@ export const loginController = asyncHandler(
                 return res.status(HTTPSTATUS.OK).json({
                     message: 'Login successful',
                     data: {
+                        user: rawUser,
                         accessToken,
                         refreshToken,
-                        user,
                     },
                 });
             }
@@ -121,7 +123,11 @@ export const refreshController = asyncHandler(async (req: Request, res: Response
         const user = await UserModel.findById(decoded.id);
         if (!user)
             return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
-        const newAccessToken = generateAccessToken({ id: user._id, email: user.email, workspace: user.currentWorkspace });
+        const newAccessToken = generateAccessToken({
+            id: user._id,
+            email: user.email,
+            workspace: user.currentWorkspace,
+        });
         res.cookie('auth_token', newAccessToken, {
             httpOnly: true,
             secure: env.node_env === 'production',

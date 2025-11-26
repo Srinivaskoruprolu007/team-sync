@@ -10,7 +10,7 @@ export const createWorkspaceController = asyncHandler(async (req: Request, res: 
         ...req.body,
     });
     const user = req.user as any;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     logger.info('user', { user });
 
     const { workspace } = await createWorkspace(body, userId);

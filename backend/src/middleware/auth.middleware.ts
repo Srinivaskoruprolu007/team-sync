@@ -1,5 +1,6 @@
 import { HTTPSTATUS } from '@/config/http.config';
 import { verifyToken } from '@/utils/jwt';
+import logger from '@/utils/logger';
 import { Request, Response, NextFunction } from 'express';
 
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
@@ -7,6 +8,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
     const cookieToken = req?.cookies?.auth_token;
+    logger.info('token', { bearerToken, cookieToken });
     const token = bearerToken || cookieToken;
     if (!token) {
         return res.status(HTTPSTATUS.UNAUTHORIZED).json({
@@ -15,6 +17,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
     }
     try {
         const decoded = verifyToken(token);
+        logger.info('decoded', { decoded });
         req.user = decoded;
         next();
     } catch (error) {
