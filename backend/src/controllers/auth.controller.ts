@@ -121,7 +121,7 @@ export const refreshController = asyncHandler(async (req: Request, res: Response
         const user = await UserModel.findById(decoded.id);
         if (!user)
             return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Invalid refresh token' });
-        const newAccessToken = generateAccessToken({ id: user._id, email: user.email });
+        const newAccessToken = generateAccessToken({ id: user._id, email: user.email, workspace: user.currentWorkspace });
         res.cookie('auth_token', newAccessToken, {
             httpOnly: true,
             secure: env.node_env === 'production',
