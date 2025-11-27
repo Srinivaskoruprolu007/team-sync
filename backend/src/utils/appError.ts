@@ -1,5 +1,5 @@
-import { ErrorCodeEnum, ErrorCodeEnumType } from "@/enums/error-code.enum";
-import { HTTPSTATUS, HttpStatusCodeType } from "@/config/http.config";
+import { ErrorCodeEnum, ErrorCodeEnumType } from '@/enums/error-code.enum';
+import { HTTPSTATUS, HttpStatusCodeType } from '@/config/http.config';
 export class AppError extends Error {
     public statusCode: HttpStatusCodeType;
     public errorCode?: ErrorCodeEnumType;
@@ -18,7 +18,7 @@ export class AppError extends Error {
 
 export class HttpException extends AppError {
     constructor(
-        message = "Http Exception Error",
+        message = 'Http Exception Error',
         statusCode: HttpStatusCodeType,
         errorCode?: ErrorCodeEnumType
     ) {
@@ -27,10 +27,7 @@ export class HttpException extends AppError {
 }
 
 export class InternalServerException extends AppError {
-    constructor(
-        message = "Internal Server Error",
-        errorCode?: ErrorCodeEnumType
-    ) {
+    constructor(message = 'Internal Server Error', errorCode?: ErrorCodeEnumType) {
         super(
             HTTPSTATUS.INTERNAL_SERVER_ERROR,
             message,
@@ -40,31 +37,29 @@ export class InternalServerException extends AppError {
 }
 
 export class NotFoundException extends AppError {
-    constructor(message = "Resource Not Found", errorCode?: ErrorCodeEnumType) {
-        super(
-            HTTPSTATUS.NOT_FOUND,
-            message,
-            errorCode || ErrorCodeEnum.RESOURCE_NOT_FOUND
-        );
+    constructor(message = 'Resource Not Found', errorCode?: ErrorCodeEnumType) {
+        super(HTTPSTATUS.NOT_FOUND, message, errorCode || ErrorCodeEnum.RESOURCE_NOT_FOUND);
     }
 }
 
 export class BadRequestException extends AppError {
-    constructor(message = "Bad Request", errorCode?: ErrorCodeEnumType) {
-        super(
-            HTTPSTATUS.BAD_REQUEST,
-            message,
-            errorCode || ErrorCodeEnum.VALIDATION_ERROR
-        );
+    constructor(message = 'Bad Request', errorCode?: ErrorCodeEnumType) {
+        super(HTTPSTATUS.BAD_REQUEST, message, errorCode || ErrorCodeEnum.VALIDATION_ERROR);
     }
 }
 
 export class UnauthorizedException extends AppError {
-    constructor(message = "Unauthorized", errorCode?: ErrorCodeEnumType) {
+    constructor(message = 'Unauthorized', errorCode?: ErrorCodeEnumType) {
         super(
             HTTPSTATUS.UNAUTHORIZED,
             message,
             errorCode || ErrorCodeEnum.AUTH_UNAUTHORIZED_ACCESS
         );
+    }
+}
+
+export class ForbiddenException extends AppError {
+    constructor(message = 'Forbidden', errorCode?: ErrorCodeEnumType) {
+        super(HTTPSTATUS.FORBIDDEN, message, errorCode || ErrorCodeEnum.AUTH_FORBIDDEN_ACCESS);
     }
 }
