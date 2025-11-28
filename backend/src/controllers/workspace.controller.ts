@@ -1,5 +1,5 @@
 import { HTTPSTATUS } from '@/config/http.config';
-import { createWorkspaceSchema } from './../validation/workspace.validation';
+import { createWorkspaceSchema, workspaceIdSchema } from './../validation/workspace.validation';
 import { asyncHandler } from '@/middleware/asyncHandler.middleware';
 import { createWorkspace, getAllWorkspaces, getWorkspaceById } from '@/services/workspace.service';
 import { Request, Response } from 'express';
@@ -29,7 +29,7 @@ export const getAllWorkspacesController = asyncHandler(async (req: Request, res:
 });
 
 export const getWorkspaceByIdController = asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.params.workspaceId;
+    const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
     const userId = req.user?.id;
     if (!userId) return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
     const { workspace } = await getWorkspaceById(workspaceId, userId);
