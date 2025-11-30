@@ -42,7 +42,6 @@ export const getWorkspaceByIdController = asyncHandler(async (req: Request, res:
         return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
     }
 
-    // ✅ Now returns both workspace and members
     const { workspace, members } = await getWorkspaceById(workspaceId, userId);
 
     return res.status(HTTPSTATUS.OK).json({
