@@ -7,7 +7,7 @@ import { ForbiddenException, NotFoundException } from '@/utils/appError';
 import mongoose from 'mongoose';
 
 export const createWorkspace = async (
-    body: { name: string; description?: string | undefined },
+    body: { name: string; description?: string },
     userId: string
 ) => {
     const { name, description } = body;
@@ -15,45 +15,63 @@ export const createWorkspace = async (
     if (!user) {
         throw new NotFoundException('User not found');
     }
+
     const ownerRole = await RoleModel.findOne({ name: RoleEnum.OWNER });
     if (!ownerRole) {
         throw new NotFoundException('Owner role not found');
     }
-    const workspace = new WorkspaceModel({
-        name,
-        description,
-        owner: user._id,
-    });
-    await workspace.save();
-    const member = new MemberModel({
-        userId: user._id,
-        workspaceId: workspace._id,
-        role: ownerRole._id,
-        joinedAt: new Date(),
-    });
-    await member.save();
-    user.currentWorkspace = workspace._id as mongoose.Types.ObjectId;
-    await user.save();
-    return { workspace };
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const workspace = await new WorkspaceModel({
+            name,
+            description,
+            owner: user._id,
+        }).save({ session });
+
+        await new MemberModel({
+            userId: user._id,
+            workspaceId: workspace._id,
+            role: ownerRole._id,
+            joinedAt: new Date(),
+        }).save({ session });
+
+        user.currentWorkspace = workspace._id as mongoose.Types.ObjectId;
+        await user.save({ session });
+
+        await session.commitTransaction();
+        return { workspace };
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    } finally {
+        session.endSession();
+    }
 };
 
 export const getAllWorkspaces = async (userId: string) => {
-    const memberships = await MemberModel.find({ userId })
-        .populate('workspaceId')
-        .select('-password')
-        .exec();
-    const workspaces = memberships.map((membership) => membership.workspaceId);
+    const memberships = await MemberModel.find({ userId }).select('workspaceId');
+    const workspaceIds = memberships.map((m) => m.workspaceId);
+    const workspaces = await WorkspaceModel.find({ _id: { $in: workspaceIds } });
     return { workspaces };
 };
 
 export const getWorkspaceById = async (workspaceId: string, userId: string) => {
     const workspace = await WorkspaceModel.findById(workspaceId).populate('owner').exec();
+
     if (!workspace) {
         throw new NotFoundException('Workspace not found');
     }
-    const isMember = await MemberModel.findOne({ workspaceId: workspace._id, userId });
+
+    const isMember = await MemberModel.findOne({
+        workspaceId: workspace._id,
+        userId,
+    });
+
     if (!isMember) {
         throw new ForbiddenException('You are not a member of this workspace');
     }
+
     return { workspace };
 };

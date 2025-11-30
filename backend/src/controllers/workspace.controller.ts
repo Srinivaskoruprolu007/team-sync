@@ -5,10 +5,13 @@ import { createWorkspace, getAllWorkspaces, getWorkspaceById } from '@/services/
 import { Request, Response } from 'express';
 
 export const createWorkspaceController = asyncHandler(async (req: Request, res: Response) => {
-    const body = createWorkspaceSchema.parse({
-        ...req.body,
-    });
+    const body = createWorkspaceSchema.parse({ ...req.body });
     const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
+    }
+
     const { workspace } = await createWorkspace(body, userId);
     return res.status(HTTPSTATUS.CREATED).json({
         message: 'Workspace created successfully',
@@ -18,7 +21,10 @@ export const createWorkspaceController = asyncHandler(async (req: Request, res: 
 
 export const getAllWorkspacesController = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.id;
-    if (!userId) return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
+    if (!userId) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
+    }
+
     const { workspaces } = await getAllWorkspaces(userId);
     return res.status(HTTPSTATUS.OK).json({
         data: {
@@ -31,7 +37,11 @@ export const getAllWorkspacesController = asyncHandler(async (req: Request, res:
 export const getWorkspaceByIdController = asyncHandler(async (req: Request, res: Response) => {
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
     const userId = req.user?.id;
-    if (!userId) return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
+
+    if (!userId) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
+    }
+
     const { workspace } = await getWorkspaceById(workspaceId, userId);
     return res.status(HTTPSTATUS.OK).json({
         data: {
