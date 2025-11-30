@@ -1,10 +1,11 @@
 import { RoleEnum } from '@/enums/role.enum';
-import MemberModel from '@/models/member.model';
 import RoleModel from '@/models/role.model';
 import UserModel from '@/models/user.model';
 import WorkspaceModel from '@/models/workspace.model';
-import { ForbiddenException, NotFoundException } from '@/utils/appError';
+import { NotFoundException } from '@/utils/appError';
 import mongoose from 'mongoose';
+import { addMemberToWorkspace } from '@/services/member.service';
+import MemberModel from '@/models/member.model';
 
 export const createWorkspace = async (
     body: { name: string; description?: string },
@@ -30,12 +31,7 @@ export const createWorkspace = async (
             owner: user._id,
         }).save({ session });
 
-        await new MemberModel({
-            userId: user._id,
-            workspaceId: workspace._id,
-            role: ownerRole._id,
-            joinedAt: new Date(),
-        }).save({ session });
+        await addMemberToWorkspace(user.id, workspace.id, ownerRole.id, session);
 
         user.currentWorkspace = workspace._id as mongoose.Types.ObjectId;
         await user.save({ session });
@@ -50,10 +46,15 @@ export const createWorkspace = async (
     }
 };
 
+// ✅ Added back getAllWorkspaces
 export const getAllWorkspaces = async (userId: string) => {
+    // Find all memberships for this user
     const memberships = await MemberModel.find({ userId }).select('workspaceId');
     const workspaceIds = memberships.map((m) => m.workspaceId);
+
+    // Fetch workspaces by IDs
     const workspaces = await WorkspaceModel.find({ _id: { $in: workspaceIds } });
+
     return { workspaces };
 };
 
@@ -64,14 +65,11 @@ export const getWorkspaceById = async (workspaceId: string, userId: string) => {
         throw new NotFoundException('Workspace not found');
     }
 
-    const isMember = await MemberModel.findOne({
-        workspaceId: workspace._id,
-        userId,
-    });
+    // You can delegate member fetching to member.service if needed
+    const members = await MemberModel.find({ workspaceId: workspace._id })
+        .populate('userId', 'name email')
+        .populate('role', 'name')
+        .exec();
 
-    if (!isMember) {
-        throw new ForbiddenException('You are not a member of this workspace');
-    }
-
-    return { workspace };
+    return { workspace, members };
 };

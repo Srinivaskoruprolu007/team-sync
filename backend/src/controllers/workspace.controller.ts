@@ -15,7 +15,7 @@ export const createWorkspaceController = asyncHandler(async (req: Request, res: 
     const { workspace } = await createWorkspace(body, userId);
     return res.status(HTTPSTATUS.CREATED).json({
         message: 'Workspace created successfully',
-        workspace,
+        data: { workspace },
     });
 });
 
@@ -28,7 +28,7 @@ export const getAllWorkspacesController = asyncHandler(async (req: Request, res:
     const { workspaces } = await getAllWorkspaces(userId);
     return res.status(HTTPSTATUS.OK).json({
         data: {
-            length: workspaces.length,
+            count: workspaces.length,
             workspaces,
         },
     });
@@ -42,10 +42,13 @@ export const getWorkspaceByIdController = asyncHandler(async (req: Request, res:
         return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: 'Unauthorized' });
     }
 
-    const { workspace } = await getWorkspaceById(workspaceId, userId);
+    // ✅ Now returns both workspace and members
+    const { workspace, members } = await getWorkspaceById(workspaceId, userId);
+
     return res.status(HTTPSTATUS.OK).json({
         data: {
             workspace,
+            members,
         },
     });
 });
